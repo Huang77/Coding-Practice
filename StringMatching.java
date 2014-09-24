@@ -1,11 +1,11 @@
 
 public class StringMatching {
-	// Brute Force 暴力匹配法
-	public static int BruteForce (String str, String pattern) {
+	// Brute Force
+	public static int BruteForce (String str, int start, String pattern) {
 		if (str == null || str.length() == 0 || pattern == null || pattern.length() == 0) {
 			return -1;
 		}
-		int i = 0, j =0;
+		int i = start, j =0;
 		int sizeS = str.length(), sizeP = pattern.length();
 		
 		while (i < sizeS && j < sizeP) {
@@ -13,53 +13,70 @@ public class StringMatching {
 				i++;
 				j++;
 			} else {
-				i = i - j + 1;   // 匹配不成功，i重新回到下一个字符串中开始匹配
+				i = i - j + 1;   
 				j = 0;
 			}
 		}
 		if (j == sizeP) {
-			return (i - j);  // 如果匹配，则返回pattern串在str串中的起始位置
+			return (i - j);  
 		} else {
 			return -1;
 		}
 	}
 	
-	// KMP算法
-	public static int KMP (String str, String pattern) {
+	// KMP
+	public static int KMP (String str, int start, String pattern) {
 		if (str == null || str.length() == 0 || pattern == null || pattern.length() == 0) {
 			return -1;
 		}
+		if (start >= str.length()) {
+			System.out.println("Index out of range.");
+			return -1;
+		}
 		int sizeS = str.length(), sizeP = pattern.length();
-		
-		// initialize the next array for string pattern
-		int[] next = new int[sizeP];
-		next[0] = 0;
-		int i = 0, j = next[0];
-		for (i = 1; i < sizeP; i++) {
-			while (j >= 0 && pattern.charAt(i) != pattern.charAt(j + 1)) {
-				j = next[j];
-			}
-			if (pattern.charAt(i) == pattern.charAt(j + 1)) {
-				next[i] = next[j] + 1;
-			} else {
-				next[i] = 0;
-			}
-		}
-		
-		// match the two string
-		j = 0;
-		for (i = 0; i < sizeS; i++) {
-			while (j >= 0 && str.charAt(i) != pattern.charAt(j + 1)) {
-				j = next[j];
-			}
-			if (pattern.charAt(j + 1) == str.charAt(i)) {
+		int[] next = getNextArray(pattern);  // get next array 
+		int i = start, j = 0;
+		while (i < sizeS && j < sizeP) {
+			// if j == -1, means str[i] != pattern[0], than i++ and start over from j = 0;
+			// if str[i] == pattern[j], than i++ and j++, go on matching
+			if (j == -1 || str.charAt(i) == pattern.charAt(j)) {
+				i++;
 				j++;
-			}
-			if (j == sizeP) {
-				return i - j;
+			} else { // if it is not matched, j go back to next[j]
+				j = next[j];
 			}
 		}
-		return -1;
+		if (j < sizeP) { // not match
+			return -1;
+		} else {  // match and return the index of the pattern in str
+			return i - j;
+		}
+	
+	}
+	
+	private static int[] getNextArray (String pattern) {
+		int size = pattern.length();
+		int[] next = new int[size];
+		
+		next[0] = -1;  // initialize nxet[0] = -1
+		if (size == 1) {
+			return next;
+		} 
+		next[1] = 0; // if the length of pattern > 1, initialize next[1] = 0;
+		int j = 1;
+		int k = next[1];
+		while (j < size - 1) {
+			if (pattern.charAt(j) == pattern.charAt(k)) {
+				next[j + 1] = k + 1;
+				j++;
+			} else if (k == 0) {  // not match
+				next[j + 1] = 0;
+				j++;
+			} else {
+				k = next[k];  // k go back
+			}
+		}
+		return next;
 	}
 	
 	
@@ -67,8 +84,8 @@ public class StringMatching {
 	// test
 	public static void main (String[] args) {
 		String str = "abcdef";
-		String pattern = "def";
-		System.out.println(BruteForce(str, pattern));
-		System.out.println(KMP(str, pattern));
+		String pattern = "cd";
+		System.out.println(BruteForce(str, 0, pattern));
+		System.out.println(KMP(str, 0, pattern));
 	}
 }
